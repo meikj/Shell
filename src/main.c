@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
 		if(fgets(buffer, 512, stdin) == NULL){ 
 		   perror ("Error, Standard input closed");
 	       return 0;}
-		strtok (buffer,",.-");
+		strtok (buffer," ,.-");
 	    printf ("%s\n", buffer);
 	    if(strncmp (buffer,"Exit",4) ==0){
 		  return 0;}
