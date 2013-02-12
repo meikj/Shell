@@ -28,8 +28,8 @@ int main(int argc, char *argv[]) {
 	// User input buffer
 	char buffer[512];
 	
-	// Store tokens here (um, for the time being statically allocate 10 possible tokens)
-	char *token_list[10];
+	// Store tokens here (according to specification 50 tokens is reasonable)
+	char *token_list[50];
 	int token_count = 0;
 	
 	while(1) {
