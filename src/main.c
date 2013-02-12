@@ -9,13 +9,8 @@
    Params:
 	argc - The number of arguments
 	argv - The array of argument strings (argv[0] is the program name)
-	
-   Returns:
-	0 - If successful
-	1 - If fork() failed
-	2 - If exec() failed
  */
-int execute_process(int argc, char *argv[]) {
+void execute_process(int argc, char *argv[]) {
 	pid_t new_process;
 	
 	// fork() a new child process
@@ -23,16 +18,13 @@ int execute_process(int argc, char *argv[]) {
 	
 	if(new_process < 0) {
 		// Error occurred
-		return 1;
+		perror("error: fork() failed");
 	}
 	else if(new_process == 0) {
 		// Child process
 		printf("[DEBUG]: execute_process(): execlp() called\n");
-		
-		if(execlp(argv[0], argv) == -1) {
-			// An error occured
-			return 2;
-		}
+		if(execlp(argv[0], argv[0], argv + 1) == -1)
+			perror("error: execlp() failed");
 	}
 	else {
 		// Wait for child to complete
@@ -107,10 +99,7 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else {
 		// An unsupported internal command was called, we must assume it's an external command
-		
-		// TODO: Implement execute_process() code
-		
-		printf("'%s' is an unrecognised internal command, please use 'help' for a list of available commands\n", token_list[0]);
+		execute_process(token_count, token_list);
 	}
 	return;
 }
@@ -132,6 +121,10 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 		
+		if(buffer[strlen(buffer) - 1] == '\n')
+			// Need to delete new lines, otherwise it messes with exec()
+			buffer[strlen(buffer) - 1] == '\0';
+		
 		// Tokenize the user input and store the tokens in an array for easy parsing
 		token_list[token_count] = strtok(buffer, " ");
 		
@@ -141,6 +134,9 @@ int main(int argc, char *argv[]) {
 			token_count++;
 			token_list[token_count] = strtok(NULL, " ");
 		}
+		
+		// Assign the last token as NULL for proper argument parsing
+		token_list[++token_count] = NULL;
 		
 		// Now parse the token(s) and reset the counter
 		parse_tokens(token_count, token_list);
