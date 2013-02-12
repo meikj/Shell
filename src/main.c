@@ -27,47 +27,47 @@ int execute_process(int argc, char *argv[]) {
  */
 void parse_tokens(int token_count, char *token_list[]) {
 	// Use the first token as indication of what to do (e.g. exit, cd, etc.)
-	if(strncmp(token_list[0]), "cd", 2) == 0) {
+	if(strncmp(token_list[0], "cd", 2) == 0) {
 		// cd called
 		// TODO: cd
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "pwd", 3) == 0) {
+	else if(strncmp(token_list[0], "pwd", 3) == 0) {
 		// pwd called
 		// TODO: pwd
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "getpath", 7) == 0) {
+	else if(strncmp(token_list[0], "getpath", 7) == 0) {
 		// getpath called
 		// TODO: getpath
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "setpath", 7) == 0) {
+	else if(strncmp(token_list[0], "setpath", 7) == 0) {
 		// setpath called
 		// TODO: setpath
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "history", 7) == 0) {
+	else if(strncmp(token_list[0], "history", 7) == 0) {
 		// history called
 		// TODO: history
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "!!", 2) == 0) {
+	else if(strncmp(token_list[0], "!!", 2) == 0) {
 		// !! called
 		// TODO: !!
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "!", 1) == 0) {
+	else if(strncmp(token_list[0], "!", 1) == 0) {
 		// !<no> called
 		// TODO: !<no>
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "alias", 5) == 0) {
+	else if(strncmp(token_list[0], "alias", 5) == 0) {
 		// alias called
 		// TODO: alias
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0]), "unalias", 7) == 0) {
+	else if(strncmp(token_list[0], "unalias", 7) == 0) {
 		// unalias called
 		// TODO: unalias
 		printf("Not supported... yet\n");
