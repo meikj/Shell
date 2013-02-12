@@ -1,6 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+/* Execute an external process using the arguments provided
+   
+   Params:
+	argc - The number of arguments
+	argv - The array of argument strings (argv[0] is the program name)
+	
+   Returns 0 if successful, otherwise an error occured
+ */
+int execute_process(int argc, char *argv[]) {
+	// TODO: Implement process creation using UNIX specific code. We'll need to start using
+	// a *nix-based OS for testing as fork() and exec() are used, or at least Cygwin on Windows
+	
+	return 0;
+}
 
 /* Parse the tokenized input and perform the relevant and appropriate operation(s)
    
@@ -9,17 +26,67 @@
 	token_list - The array of token strings
  */
 void parse_tokens(int token_count, char *token_list[]) {
-	// Use the first token as indication of what to do (e.g. exit, ls, etc.)
-	if(strncmp(token_list[0], "exit", 4) == 0) {
+	// Use the first token as indication of what to do (e.g. exit, cd, etc.)
+	if(strncmp(token_list[0]), "cd", 2) == 0) {
+		// cd called
+		// TODO: cd
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "pwd", 3) == 0) {
+		// pwd called
+		// TODO: pwd
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "getpath", 7) == 0) {
+		// getpath called
+		// TODO: getpath
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "setpath", 7) == 0) {
+		// setpath called
+		// TODO: setpath
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "history", 7) == 0) {
+		// history called
+		// TODO: history
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "!!", 2) == 0) {
+		// !! called
+		// TODO: !!
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "!", 1) == 0) {
+		// !<no> called
+		// TODO: !<no>
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "alias", 5) == 0) {
+		// alias called
+		// TODO: alias
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0]), "unalias", 7) == 0) {
+		// unalias called
+		// TODO: unalias
+		printf("Not supported... yet\n");
+	}
+	else if(strncmp(token_list[0], "exit", 4) == 0) {
 		// exit command called
 		exit(0);
-	} else if(strncmp(token_list[0], "help", 4) == 0) {
+	}
+	else if(strncmp(token_list[0], "help", 4) == 0) {
 		// help command called
-		printf("help\tlist the available shell commands\n");
+		printf("help\tlist the available internal shell commands\n");
 		printf("exit\texit the shell\n");
-	} else {
-		// An unsupported/invalid command was passed
-		printf("Invalid command called. Please use 'help' for more information.\n");
+	}
+	else {
+		// An unsupported internal command was called, we must assume it's an external command
+		
+		// TODO: Implement execute_process() code
+		
+		printf("'%s' is an unrecognised internal command, please use 'help' for a list of available commands\n", token_list[0]);
 	}
 	return;
 }
@@ -37,7 +104,7 @@ int main(int argc, char *argv[]) {
 		
 		if(fgets(buffer, 512, stdin) == NULL) {
 			// stdin stream closed, can't continue
-			perror("stdin stream closed");
+			perror("error: stdin stream closed");
 			exit(1);
 		}
 		
