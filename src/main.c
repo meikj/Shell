@@ -10,11 +10,35 @@
 	argc - The number of arguments
 	argv - The array of argument strings (argv[0] is the program name)
 	
-   Returns 0 if successful, otherwise an error occured
+   Returns:
+	0 - If successful
+	1 - If fork() failed
+	2 - If exec() failed
  */
 int execute_process(int argc, char *argv[]) {
-	// TODO: Implement process creation using UNIX specific code. We'll need to start using
-	// a *nix-based OS for testing as fork() and exec() are used, or at least Cygwin on Windows
+	pid_t new_process;
+	
+	// fork() a new child process
+	new_process = fork();
+	
+	if(new_process < 0) {
+		// Error occurred
+		return 1;
+	}
+	else if(new_process == 0) {
+		// Child process
+		printf("[DEBUG]: execute_process(): execlp() called\n");
+		
+		if(execlp(argv[0], argv) == -1) {
+			// An error occured
+			return 2;
+		}
+	}
+	else {
+		// Wait for child to complete
+		wait(NULL);
+		printf("[DEBUG]: execute_process(): child process complete\n");
+	}
 	
 	return 0;
 }
