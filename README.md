@@ -7,7 +7,7 @@ University of Strathclyde CS210 shell group project
 * Stage one - done
 * Stage two - done
 * Stage three - done
-* Stage four - not done
+* Stage four - done
 * Stage five - not done
 * Stage six - not done
 * Stage seven - not done
