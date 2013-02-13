@@ -16,11 +16,15 @@ char *env_path_current = NULL;
 void cleanup() {
 	// Reset the PATH variable
 	setenv("PATH", env_path_master, 1);
+	
+	return;
 }
 
 /* getpath internal command */
 void command_getpath() {
 	printf("%s\n", env_path_current);
+	
+	return;
 }
 
 /* setpath internal command */
@@ -31,6 +35,8 @@ void command_setpath(const char *path) {
 		
 	strncpy(env_path_current, path, strlen(path) + 1);
 	setenv("PATH", env_path_current, 1);
+	
+	return;
 }
 
 /* pwd internal command */
@@ -160,6 +166,7 @@ void parse_tokens(int token_count, char *token_list[]) {
 		// external command
 		execute_process(token_count, token_list);
 	}
+	
 	return;
 }
 
