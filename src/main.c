@@ -7,6 +7,7 @@
 
 #define BUFFER_SIZE	512
 #define MAX_TOKENS	50
+#define PATH_MAX	512
 
 /* Execute an external process using the arguments provided
    
@@ -60,8 +61,9 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strncmp(token_list[0], "pwd", 3) == 0) {
 		// pwd called
-		// TODO: pwd
-		printf("Not supported... yet\n");
+		char current_directory[PATH_MAX];
+		getcwd(current_directory, PATH_MAX);
+		printf("%s\n", current_directory);
 	}
 	else if(strncmp(token_list[0], "getpath", 7) == 0) {
 		// getpath called
@@ -123,6 +125,18 @@ int main(int argc, char *argv[]) {
 	char *token_list[MAX_TOKENS];
 	int token_count = 0;
 	
+	// Store the path to HOME
+	char *path_home;
+	
+	// Get the users HOME and set the current directory to that
+	if((path_home = getenv("HOME")) == NULL)
+		printf("warning: HOME variable undefined\n");
+	else {
+		printf("[DEBUG]: HOME = %s\n", path_home);
+		chdir(path_home);
+	}
+	
+	// Start the shell
 	while(1) {
 		printf("$ ");
 		
