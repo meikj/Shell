@@ -3,6 +3,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+
+#define BUFFER_SIZE	512
+#define MAX_TOKENS	50
 
 /* Execute an external process using the arguments provided
    
@@ -12,7 +16,7 @@
  */
 void execute_process(int argc, char *argv[]) {
 	pid_t new_process;
-	
+
 	// fork() a new child process
 	new_process = fork();
 	
@@ -23,8 +27,10 @@ void execute_process(int argc, char *argv[]) {
 	else if(new_process == 0) {
 		// Child process
 		printf("[DEBUG]: execute_process(): execlp() called\n");
-		if(execlp(argv[0], argv[0], argv + 1) == -1)
-			perror("error: execlp() failed");
+		
+		if(execvp(argv[0], argv) == -1)
+			perror("error: execvp() failed");
+			exit(1);
 	}
 	else {
 		// Wait for child to complete
@@ -32,10 +38,10 @@ void execute_process(int argc, char *argv[]) {
 		printf("[DEBUG]: execute_process(): child process complete\n");
 	}
 	
-	return 0;
+	return;
 }
 
-/* Parse the tokenized input and perform the relevant and appropriate operation(s)
+/* Parse the tokenized input and perform the relevant and appropriate operation
    
    Params:
 	token_count - The number of tokens in the array
@@ -98,7 +104,8 @@ void parse_tokens(int token_count, char *token_list[]) {
 		printf("exit\texit the shell\n");
 	}
 	else {
-		// An unsupported internal command was called, we must assume it's an external command
+		// An unsupported internal command was called, we must assume it's an 
+		// external command
 		execute_process(token_count, token_list);
 	}
 	return;
@@ -106,37 +113,37 @@ void parse_tokens(int token_count, char *token_list[]) {
 
 int main(int argc, char *argv[]) {
 	// User input buffer
-	char buffer[512];
+	char buffer[BUFFER_SIZE];
 	
 	// Store tokens here (according to specification 50 tokens is reasonable)
-	char *token_list[50];
+	char *token_list[MAX_TOKENS];
 	int token_count = 0;
 	
 	while(1) {
 		printf("$ ");
 		
-		if(fgets(buffer, 512, stdin) == NULL) {
+		if(fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
 			// stdin stream closed, can't continue
 			perror("error: stdin stream closed");
 			exit(1);
 		}
 		
-		if(buffer[strlen(buffer) - 1] == '\n')
-			// Need to delete new lines, otherwise it messes with exec()
-			buffer[strlen(buffer) - 1] == '\0';
-		
-		// Tokenize the user input and store the tokens in an array for easy parsing
+		// Tokenize the user input and store the tokens in an array for easy 
+		// parsing
 		token_list[token_count] = strtok(buffer, " ");
 		
 		while(token_list[token_count] != NULL) {
 			// There's still more tokens to get
-			printf("token_list[%d] = %s\n", token_count, token_list[token_count]);
 			token_count++;
 			token_list[token_count] = strtok(NULL, " ");
 		}
 		
-		// Assign the last token as NULL for proper argument parsing
-		token_list[++token_count] = NULL;
+		// Remove the trailing new line from the last token
+		token_list[token_count - 1][strlen(token_list[token_count -1]) -1] = '\0';
+		
+		for(int i = 0; i <= token_count; i++)
+			printf("token_list[%d] = %s\n", i, token_list[i]);
+			
 		
 		// Now parse the token(s) and reset the counter
 		parse_tokens(token_count, token_list);
@@ -145,3 +152,4 @@ int main(int argc, char *argv[]) {
 	
 	return 0;
 }
+
