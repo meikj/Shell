@@ -9,6 +9,30 @@
 #define MAX_TOKENS	50
 #define PATH_MAX	512
 
+char *env_path_master = NULL;
+char *env_path_current = NULL;
+
+/* Execute clean up code */
+void cleanup() {
+	// Reset the PATH variable
+	setenv("PATH", env_path_master, 1);
+}
+
+/* getpath internal command */
+void command_getpath() {
+	printf("%s\n", env_path_current);
+}
+
+/* setpath internal command */
+void command_setpath(const char *path) {
+	if(strlen(env_path_current) < strlen(path))
+		// Not enough space in current path to store new path
+		env_path_current = malloc(strlen(path) + 1);
+		
+	strncpy(env_path_current, path, strlen(path) + 1);
+	setenv("PATH", env_path_current, 1);
+}
+
 /* pwd internal command */
 void command_pwd() {
 	char current_directory[PATH_MAX];
@@ -21,6 +45,8 @@ void command_pwd() {
 
 /* help internal command */
 void command_help() {
+	printf("getpath\tprint system path\n");
+	printf("setpath\tset system path\n");
 	printf("pwd\tprint current working directory\n");
 	printf("help\tlist the available internal shell commands\n");
 	printf("exit\texit the shell\n");
@@ -84,13 +110,16 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strncmp(token_list[0], "getpath", 7) == 0) {
 		// getpath called
-		// TODO: getpath
-		printf("Not supported... yet\n");
+		command_getpath();
 	}
 	else if(strncmp(token_list[0], "setpath", 7) == 0) {
 		// setpath called
-		// TODO: setpath
-		printf("Not supported... yet\n");
+		if(token_count != 2)
+			// Needs to be in format setpath <path>
+			printf("usage: setpath <path>\n");
+		else
+			// token_list[1] = <path>
+			command_setpath(token_list[1]);
 	}
 	else if(strncmp(token_list[0], "history", 7) == 0) {
 		// history called
@@ -119,6 +148,7 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strncmp(token_list[0], "exit", 4) == 0) {
 		// exit command called
+		cleanup();
 		exit(0);
 	}
 	else if(strncmp(token_list[0], "help", 4) == 0) {
@@ -141,15 +171,23 @@ int main(int argc, char *argv[]) {
 	char *token_list[MAX_TOKENS];
 	int token_count = 0;
 	
-	// Store the path to HOME
-	char *path_home;
+	// Store the path to the HOME directory
+	char *env_home;
 	
-	// Get the users HOME and set the current directory to that
-	if((path_home = getenv("HOME")) == NULL)
+	// Get the users PATH variable and set the shell PATH to that
+	if((env_path_master = getenv("PATH")) == NULL)
+		printf("warning: PATH variable undefined\n");
+	else {
+		printf("[DEBUG]: PATH = %s\n", env_path_master);
+		env_path_current = env_path_master;
+	}
+	
+	// Get the users HOME directory and set the current directory to that
+	if((env_home = getenv("HOME")) == NULL)
 		printf("warning: HOME variable undefined\n");
 	else {
-		printf("[DEBUG]: HOME = %s\n", path_home);
-		chdir(path_home);
+		printf("[DEBUG]: HOME = %s\n", env_home);
+		chdir(env_home);
 	}
 	
 	// Start the shell
@@ -159,6 +197,7 @@ int main(int argc, char *argv[]) {
 		if(fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
 			// stdin stream closed, can't continue
 			perror("error: stdin stream closed");
+			cleanup();
 			exit(1);
 		}
 		
