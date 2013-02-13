@@ -9,6 +9,25 @@
 #define MAX_TOKENS	50
 #define PATH_MAX	512
 
+/* pwd internal command */
+void command_pwd() {
+	char current_directory[PATH_MAX];
+	
+	getcwd(current_directory, PATH_MAX);
+	printf("%s\n", current_directory);
+	
+	return;
+}
+
+/* help internal command */
+void command_help() {
+	printf("pwd\tprint current working directory\n");
+	printf("help\tlist the available internal shell commands\n");
+	printf("exit\texit the shell\n");
+	
+	return;
+}
+
 /* Execute an external process using the arguments provided
    
    Params:
@@ -61,9 +80,7 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strncmp(token_list[0], "pwd", 3) == 0) {
 		// pwd called
-		char current_directory[PATH_MAX];
-		getcwd(current_directory, PATH_MAX);
-		printf("%s\n", current_directory);
+		command_pwd();
 	}
 	else if(strncmp(token_list[0], "getpath", 7) == 0) {
 		// getpath called
@@ -106,8 +123,7 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strncmp(token_list[0], "help", 4) == 0) {
 		// help command called
-		printf("help\tlist the available internal shell commands\n");
-		printf("exit\texit the shell\n");
+		command_help();
 	}
 	else {
 		// An unsupported internal command was called, we must assume it's an 
