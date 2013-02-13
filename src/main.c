@@ -9,6 +9,7 @@
 #define MAX_TOKENS	50
 #define PATH_MAX	512
 
+char *env_home = NULL;
 char *env_path_master = NULL;
 char *env_path_current = NULL;
 
@@ -18,6 +19,12 @@ void cleanup() {
 	setenv("PATH", env_path_master, 1);
 	
 	return;
+}
+
+/* cd internal command */
+void command_cd(const char *path) {
+	if(chdir(path) == -1)
+		printf("%s: no such directory\n", path);
 }
 
 /* getpath internal command */
@@ -51,6 +58,7 @@ void command_pwd() {
 
 /* help internal command */
 void command_help() {
+	printf("cd\tchange current working directory\n");
 	printf("getpath\tprint system path\n");
 	printf("setpath\tset system path\n");
 	printf("pwd\tprint current working directory\n");
@@ -107,8 +115,14 @@ void parse_tokens(int token_count, char *token_list[]) {
 	// Use the first token as indication of what to do (e.g. exit, cd, etc.)
 	if(strncmp(token_list[0], "cd", 2) == 0) {
 		// cd called
-		// TODO: cd
-		printf("Not supported... yet\n");
+		if(token_count == 1)
+			// cd called by itself, set to home directory
+			command_cd(env_home);
+		else if(token_count == 2)
+			// cd called with an argument, set to that
+			command_cd(token_list[1]);
+		else
+			printf("usage: cd <dir>\n");
 	}
 	else if(strncmp(token_list[0], "pwd", 3) == 0) {
 		// pwd called
@@ -177,9 +191,6 @@ int main(int argc, char *argv[]) {
 	// Store tokens here (according to specification 50 tokens is reasonable)
 	char *token_list[MAX_TOKENS];
 	int token_count = 0;
-	
-	// Store the path to the HOME directory
-	char *env_home;
 	
 	// Get the users PATH variable and set the shell PATH to that
 	if((env_path_master = getenv("PATH")) == NULL)
