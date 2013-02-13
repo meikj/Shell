@@ -26,7 +26,11 @@ void execute_process(int argc, char *argv[]) {
 	}
 	else if(new_process == 0) {
 		// Child process
-		printf("[DEBUG]: execute_process(): execlp() called\n");
+		printf("[DEBUG]: execute_process(): execvp() called with:\n");
+		printf("\targc = %d\n", argc);
+		
+		for(int i = 0; i <= argc; i++)
+			printf("\targv[%d] = %s\n", i, argv[i]);
 		
 		if(execvp(argv[0], argv) == -1)
 			perror("error: execvp() failed");
