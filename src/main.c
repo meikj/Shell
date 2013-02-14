@@ -6,7 +6,7 @@
 #include <sys/wait.h>
 
 #define BUFFER_SIZE	512
-#define MAX_TOKENS	50
+#define TOKEN_MAX	50
 #define PATH_MAX	512
 
 // Environment code
@@ -97,8 +97,9 @@ void execute_process(int argc, char *argv[]) {
 		
 		if(execvp(argv[0], argv) == -1)
 			perror("error: execvp() failed");
+			exit(1);
 		
-		exit(1);
+		exit(0);
 	}
 	else {
 		// Wait for child to complete
@@ -192,8 +193,11 @@ int main(int argc, char *argv[]) {
 	// User input buffer
 	char buffer[BUFFER_SIZE];
 	
+	// Delimiters to use
+	char *delim = " \n";
+	
 	// Store tokens here (according to specification 50 tokens is reasonable)
-	char *token_list[MAX_TOKENS];
+	char *token_list[TOKEN_MAX];
 	int token_count = 0;
 	
 	// Get the users PATH variable and set the shell PATH to that
@@ -225,20 +229,16 @@ int main(int argc, char *argv[]) {
 		
 		// Tokenize the user input and store the tokens in an array for easy 
 		// parsing
-		token_list[token_count] = strtok(buffer, " ");
+		token_list[token_count] = strtok(buffer, delim);
 		
 		while(token_list[token_count] != NULL) {
 			// There's still more tokens to get
 			token_count++;
-			token_list[token_count] = strtok(NULL, " ");
+			token_list[token_count] = strtok(NULL, delim);
 		}
-		
-		// Remove the trailing new line from the last token
-		token_list[token_count - 1][strlen(token_list[token_count -1]) -1] = '\0';
 		
 		for(int i = 0; i <= token_count; i++)
 			printf("token_list[%d] = %s\n", i, token_list[i]);
-			
 		
 		// Now parse the token(s) and reset the counter
 		parse_tokens(token_count, token_list);
