@@ -9,6 +9,7 @@
 #define MAX_TOKENS	50
 #define PATH_MAX	512
 
+// Environment code
 char *env_home = NULL;
 char *env_path_master = NULL;
 char *env_path_current = NULL;
