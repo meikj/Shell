@@ -95,7 +95,8 @@ void execute_process(int argc, char *argv[]) {
 		
 		if(execvp(argv[0], argv) == -1)
 			perror("error: execvp() failed");
-			exit(1);
+		
+		exit(1);
 	}
 	else {
 		// Wait for child to complete
