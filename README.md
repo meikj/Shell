@@ -3,6 +3,11 @@ Shell
 
 University of Strathclyde CS210 shell group project
 
+## Compilation
+To compile the shell, please execute:
+
+```gcc alias.c main.c -pedantic -Wall -std=c99 -o shell```
+
 ## Status
 * Stage one - done
 * Stage two - done

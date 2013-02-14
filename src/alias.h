@@ -7,7 +7,7 @@
 	typedef struct {
 		char *key; // alias name
 		char *value; // what the alias resolves to
-	} alias_t
+	} alias_t;
 	
 	char *alias_get(const char *key);
 	void alias_add(const char *key, const char *value);

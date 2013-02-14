@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "alias.h"
 
 // Stores all the aliases
@@ -32,7 +34,8 @@ char *alias_get(const char *key) {
    	value - What the alias resolves to (e.g. ls -a)
  */
 void alias_add(const char *key, const char *value) {
-	alias_t alias = {key, value};
+	alias_t *alias = malloc(sizeof(alias_t));
+	
 	alias_list[alias_count] = alias;
 	alias_count++;
 	
