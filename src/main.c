@@ -26,6 +26,8 @@ void cleanup() {
 void command_cd(const char *path) {
 	if(chdir(path) == -1)
 		printf("%s: no such directory\n", path);
+		
+	return;
 }
 
 /* getpath internal command */

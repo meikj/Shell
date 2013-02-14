@@ -18,6 +18,7 @@
 	// Function declarations
 	char *alias_get(const char *key);
 	void alias_add(const char *key, const char *value);
+	void aias_remove(const char *key);
 	
 #endif
 

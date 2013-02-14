@@ -32,6 +32,21 @@ void alias_add(const char *key, const char *value) {
 	return;
 }
 
+/* Remove an alias
+   
+   Params:
+   	key - The alias name (e.g. dir)
+   
+   Returns:
+   	0 - successfully removed alias
+   	1 - failed to remove alias
+ */
+int alias_remove(const char *key) {
+	// TODO
+	
+	return 1;
+}
+
 int main(void) {
 	// Test
 }
