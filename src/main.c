@@ -39,6 +39,15 @@ history_t history_value[HISTORY_MAX];
 // Stores the number of historical elements
 unsigned int history_count = 0;
 
+/* Initialise the command history */
+void history_init() {
+	// Initialise it to empty for now
+	for(int i = 1; i < HISTORY_MAX; i++) {
+		history_value[i].number = i;
+		history_value[i].string = NULL; 
+	}
+}
+
 /* Search the alias list for the value key
    
    Params:
@@ -446,9 +455,16 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strcmp(token_list[0], "history") == 0) {
 		// history called
-		for(int i = 0; i < history_count; i++) {
-			printf("%d = %s\n",
-				history_value[i].number, history_value[i].string);
+		if(history_count == 0) {
+			fprintf(stderr, "error: no history recorded\n");
+		}
+		else {
+			for(int i = 1; i < HISTORY_MAX; i++) {
+				if(history_value[i].string != NULL) {
+					printf("%d = %s\n",
+						history_value[i].number, history_value[i].string);
+				}
+			}
 		}
 	}
 	else if(strcmp(token_list[0], "alias") == 0) {
@@ -528,6 +544,7 @@ int main(int argc, char *argv[]) {
 	// User input buffer
 	char buffer[BUFFER_SIZE];
 	char full_command[BUFFER_SIZE];
+	bool history_invoke = false;
 	
 	// Store tokens here (according to specification 50 tokens is reasonable)
 	char *token_list[TOKEN_MAX];
@@ -554,7 +571,8 @@ int main(int argc, char *argv[]) {
 	alias_init();
 	
 	// Load history
-	// TODO
+	printf("Initialising history...\n");
+	history_init();
 	
 	// Start the shell
 	while(1) {
@@ -590,8 +608,59 @@ int main(int argc, char *argv[]) {
 			continue;
 			
 		// We're using a circular array, so when we hit the max go back to start
+		int history_pos = (history_count + 1) % HISTORY_MAX;
+		
+		if(full_command[0] == '!' && full_command[1] == '!') {
+			// Previous history invokation
+			if(history_count == 0) {
+				// There's no recorded history
+				printf("There's no commands in the history\n");
+			}
+			else {
+				// Parse the previous command
+				char *prev = history_value[history_pos - 1].string;
+				strcpy(buffer, prev);
+				
+				history_invoke = true;
+			}
+		}
+		else if(full_command[0] == '!' && !(full_command[1] == '!')) {
+			// Possibly a number passed for history invokation
+			char *history_str_number = full_command + 1;
+			int history_number = atoi(history_str_number);
+			
+			if(history_number == 0 || (history_number > history_count)) {
+				// Failed - either invalid number passed or 0
+				fprintf(stderr, "error: invalid history number\n");
+			}
+			else {
+				// Got a number, so attempt to fetch the history
+				char *fetch = history_value[history_number % HISTORY_MAX].string;
+				strcpy(buffer, fetch);
+				
+				history_invoke = true;
+			}
+		}
+		
+		if(history_invoke) {
+			// Buffer has been altered with a new command
+			// NULL-ify the token_list first to remove existing elements
+			for(int i = 0; i < token_count; i++)
+				token_list[i] = NULL;
+					
+			// Place new instruction into token_list
+			token_count = 0;
+			token_list[token_count] = strtok(buffer, delim);
+			
+			while(token_list[token_count] != NULL) {
+				// There's still more tokens to get
+				token_count++;
+				token_list[token_count] = strtok(NULL, delim);
+			}
+		}
+			
+		// No matter what the command, we track it anyway
 		history_count++;
-		int history_pos = history_count % HISTORY_MAX;
 		
 		// Copy history position over to history element
 		history_value[history_pos].number = history_count;
@@ -603,6 +672,7 @@ int main(int argc, char *argv[]) {
 		// Now parse the token(s) and reset the counter
 		parse_tokens(token_count, token_list);
 		token_count = 0;
+		history_invoke = false;
 	}
 	
 	// Execute relevant clean up code
