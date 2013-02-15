@@ -205,9 +205,11 @@ void command_getpath() {
 
 /* setpath internal command */
 void command_setpath(const char *path) {
-	if(strlen(env_path_current) < strlen(path))
+	if(strlen(env_path_current) < strlen(path)) {
 		// Not enough space in current path to store new path
+		free(env_path_current);
 		env_path_current = malloc(strlen(path) + 1);
+	}
 		
 	strncpy(env_path_current, path, strlen(path) + 1);
 	setenv("PATH", env_path_current, 1);
