@@ -26,17 +26,6 @@ char *alias_value[ALIAS_MAX];
 // Stores the number of aliases present
 unsigned int alias_count = 0;
 
-/* Initialise the alias structures */
-void alias_init() {
-	// Set all values to NULL to start with
-	for(int i = 0; i < ALIAS_MAX; i++) {
-		alias_key[i] = NULL;
-		alias_value[i] = NULL;
-	}
-	
-	return;
-}
-
 /* Search the alias list for the value key
    
    Params:
@@ -47,6 +36,10 @@ void alias_init() {
    	found, NULL is returned.
  */
 char *alias_get(const char *key) {
+	// Check if key value is NULL, if so we can't continue
+	if(key == NULL)
+		return NULL;
+		
 	// Iterate through the aliases looking for a match
 	for(int i = 0; i < ALIAS_MAX; i++) {
 		if(alias_key[i] == NULL)
@@ -70,6 +63,10 @@ char *alias_get(const char *key) {
    	If the addition failed, false is returned. Otherwise true.
  */
 bool alias_add(const char *key, const char *value) {
+	// Check if either values are NULL, if so we can't continue
+	if(key == NULL || value == NULL)
+		return false;
+		
 	// Iterate through the aliases looking for a free space
 	char *exists = alias_get(key);
 	
@@ -108,6 +105,10 @@ bool alias_add(const char *key, const char *value) {
    	If the removal failed, false is returned. Otherwise true.
  */
 bool alias_remove(const char *key) {
+	// Check if key value is NULL, if so we can't continue
+	if(key == NULL)
+		return false;
+		
 	// Iterate through the aliases looking for a match
 	for(int i = 0; i < ALIAS_MAX; i++) {
 		if(alias_key[i] == NULL)
@@ -143,6 +144,72 @@ void alias_print() {
 			printf("[%d]: '%s' -> '%s'\n", i, alias_key[i], alias_value[i]);
 		}
 	}
+	
+	return;
+}
+
+/* Initialise the alias structures */
+void alias_init() {
+	FILE *alias_file = fopen(".aliases", "r");
+	char alias_buffer[BUFFER_SIZE];
+	char *alias_tokens[TOKEN_MAX];
+	int i = 0;
+	
+	if(alias_file == NULL) {
+		printf("warning: .aliases file missing\n");
+		
+		// Set all values to NULL since no aliases file exists
+		for(i = 0; i < ALIAS_MAX; i++) {
+			alias_key[i] = NULL;
+			alias_value[i] = NULL;
+		}
+	}
+	else {
+		// File exists, parse it accordingly
+		while(fgets(alias_buffer, BUFFER_SIZE, alias_file) != NULL) {
+			// We've read in a line, lets tokenize it
+			alias_tokens[i] = strtok(alias_buffer, delim);
+			
+			while(alias_tokens[i] != NULL) {
+				// Still more to split
+				i++;
+				alias_tokens[i] = strtok(NULL, delim);
+			}
+			
+			// Dome validity checking...
+			if(alias_tokens[0] == NULL)
+				continue;
+				
+			if(strcmp(alias_tokens[0], "alias") != 0)
+				continue;
+			
+			// i represents the number of tokens (beginning at 0)
+			if(i < 2)
+				// This means that there isn't enough arguments to add an alias
+				continue;
+			
+			// Parsed the line, but we need to form the command2 string as it
+			// may contain further arguments (e.g. alias dir ls -a)
+			char command2[BUFFER_SIZE] = "";
+			
+			// We want to skip the first two arguments (i.e. alias <command1>)
+			for(int j = 2; j < i; j++) {
+				strcat(command2, alias_tokens[j]);
+				
+				// i represents the number of tokens
+				if(j < (i - 1))
+					// Space the args out, except the last arg
+					strcat(command2, " ");
+			}
+			
+			// Add the alias and reset token counter
+			printf("Adding alias: '%s' -> '%s'\n", alias_tokens[1], command2);
+			alias_add(alias_tokens[1], command2);
+			i = 0;
+		}
+	}
+	
+	fclose(alias_file); 
 	
 	return;
 }
@@ -443,6 +510,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// Load aliases
+	printf("Initialising aliases:\n");
 	alias_init();
 	
 	// Load history
