@@ -10,6 +10,7 @@
 #define TOKEN_MAX	50
 #define PATH_MAX	512
 #define ALIAS_MAX	10
+#define HISTORY_MAX	20
 
 // Environment code
 char *env_home = NULL;
@@ -25,6 +26,18 @@ char *alias_value[ALIAS_MAX];
 
 // Stores the number of aliases present
 unsigned int alias_count = 0;
+
+// Defines a way of storing a command in history
+typedef struct {
+	int number; 
+	char *string;
+} history_t;
+
+// Stores the historical elements
+history_t history_value[HISTORY_MAX];
+
+// Stores the number of historical elements
+unsigned int history_count = 0;
 
 /* Search the alias list for the value key
    
@@ -316,8 +329,8 @@ void save_aliases() {
 	// Set the working directory to HOME first
 	command_cd(env_home);
 	
-	// Overwrite the old .aliases file (that's what w+ denotes)
-	alias_file = fopen(".aliases", "w+");
+	// Overwrite the old .aliases file
+	alias_file = fopen(".aliases", "w");
 	
 	for(int i = 0; i < alias_count; i++) {
 		char *arg2 = alias_key[i];
@@ -330,6 +343,8 @@ void save_aliases() {
 		printf("[DEBUG]: alias = %s %s %s\n", arg1, arg2, arg3);
 		fprintf(alias_file, "%s %s %s\n", arg1, arg2, arg3);
 	}
+	
+	fclose(alias_file);
 	
 	return;
 }
@@ -431,18 +446,10 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strcmp(token_list[0], "history") == 0) {
 		// history called
-		// TODO: history
-		printf("Not supported... yet\n");
-	}
-	else if(strcmp(token_list[0], "!!") == 0) {
-		// !! called
-		// TODO: !!
-		printf("Not supported... yet\n");
-	}
-	else if(strcmp(token_list[0], "!") == 0) {
-		// !<no> called
-		// TODO: !<no>
-		printf("Not supported... yet\n");
+		for(int i = 0; i < history_count; i++) {
+			printf("%d = %s\n",
+				history_value[i].number, history_value[i].string);
+		}
 	}
 	else if(strcmp(token_list[0], "alias") == 0) {
 		// alias called
@@ -520,6 +527,7 @@ void parse_tokens(int token_count, char *token_list[]) {
 int main(int argc, char *argv[]) {
 	// User input buffer
 	char buffer[BUFFER_SIZE];
+	char full_command[BUFFER_SIZE];
 	
 	// Store tokens here (according to specification 50 tokens is reasonable)
 	char *token_list[TOKEN_MAX];
@@ -558,6 +566,10 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		
+		// Copy buffer over to save the full command
+		strcpy(full_command, buffer);
+		strtok(full_command, "\n"); // remove trailing new line
+		
 		// Tokenize the user input and store the tokens in an array for easy 
 		// parsing
 		token_list[token_count] = strtok(buffer, delim);
@@ -576,6 +588,17 @@ int main(int argc, char *argv[]) {
 		if(token_count == 0)
 			// Can't parse nothing...
 			continue;
+			
+		// We're using a circular array, so when we hit the max go back to start
+		history_count++;
+		int history_pos = history_count % HISTORY_MAX;
+		
+		// Copy history position over to history element
+		history_value[history_pos].number = history_count;
+		
+		// Copy string from buffer over to history element
+		history_value[history_pos].string = malloc(strlen(full_command) + 1);
+		strcpy(history_value[history_pos].string, full_command);
 		
 		// Now parse the token(s) and reset the counter
 		parse_tokens(token_count, token_list);
