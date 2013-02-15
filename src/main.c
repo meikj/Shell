@@ -176,7 +176,7 @@ void alias_init() {
 				alias_tokens[i] = strtok(NULL, delim);
 			}
 			
-			// Dome validity checking...
+			// Do some validity checking...
 			if(alias_tokens[0] == NULL)
 				continue;
 				
@@ -308,16 +308,48 @@ void command_help() {
 	return;
 }
 
+/* Save the alias set to .aliases for alias persistence */
+void save_aliases() {
+	FILE *alias_file;
+	const char *arg1 = "alias";
+	
+	// Set the working directory to HOME first
+	command_cd(env_home);
+	
+	// Overwrite the old .aliases file (that's what w+ denotes)
+	alias_file = fopen(".aliases", "w+");
+	
+	for(int i = 0; i < alias_count; i++) {
+		char *arg2 = alias_key[i];
+		char *arg3 = alias_value[i];
+		
+		if(arg2 == NULL || arg3 == NULL)
+			// Record is empty, skip it
+			continue;
+		
+		printf("[DEBUG]: alias = %s %s %s\n", arg1, arg2, arg3);
+		fprintf(alias_file, "%s %s %s\n", arg1, arg2, arg3);
+	}
+	
+	return;
+}
+
+/* Save the history for history persistence */
+void save_history() {
+	// TODO
+	return;
+}
+
 /* Execute clean up code */
 void cleanup() {
 	// Reset the PATH variable
 	setenv("PATH", env_path_master, 1);
 	
 	// Save aliases
-	// TODO
+	save_aliases();
 	
 	// Save history
-	// TODO
+	save_history();
 	
 	return;
 }
