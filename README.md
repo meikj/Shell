@@ -16,7 +16,7 @@ To compile the shell, please execute:
 * Stage five - done
 * Stage six - done
 * Stage seven - done
-* Stage eight - not done
+* Stage eight - done
 * Stage nine - not done
 
 ## Authors
