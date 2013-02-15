@@ -118,7 +118,7 @@ void execute_process(int argc, char *argv[]) {
  */
 void parse_tokens(int token_count, char *token_list[]) {
 	// Use the first token as indication of what to do (e.g. exit, cd, etc.)
-	if(strncmp(token_list[0], "cd", 2) == 0) {
+	if(strcmp(token_list[0], "cd") == 0) {
 		// cd called
 		if(token_count == 1)
 			// cd called by itself, set to home directory
@@ -129,15 +129,15 @@ void parse_tokens(int token_count, char *token_list[]) {
 		else
 			printf("usage: cd <dir>\n");
 	}
-	else if(strncmp(token_list[0], "pwd", 3) == 0) {
+	else if(strcmp(token_list[0], "pwd") == 0) {
 		// pwd called
 		command_pwd();
 	}
-	else if(strncmp(token_list[0], "getpath", 7) == 0) {
+	else if(strcmp(token_list[0], "getpath") == 0) {
 		// getpath called
 		command_getpath();
 	}
-	else if(strncmp(token_list[0], "setpath", 7) == 0) {
+	else if(strcmp(token_list[0], "setpath") == 0) {
 		// setpath called
 		if(token_count != 2)
 			// Needs to be in format setpath <path>
@@ -146,37 +146,37 @@ void parse_tokens(int token_count, char *token_list[]) {
 			// token_list[1] = <path>
 			command_setpath(token_list[1]);
 	}
-	else if(strncmp(token_list[0], "history", 7) == 0) {
+	else if(strcmp(token_list[0], "history") == 0) {
 		// history called
 		// TODO: history
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0], "!!", 2) == 0) {
+	else if(strcmp(token_list[0], "!!") == 0) {
 		// !! called
 		// TODO: !!
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0], "!", 1) == 0) {
+	else if(strcmp(token_list[0], "!") == 0) {
 		// !<no> called
 		// TODO: !<no>
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0], "alias", 5) == 0) {
+	else if(strcmp(token_list[0], "alias") == 0) {
 		// alias called
 		// TODO: alias
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0], "unalias", 7) == 0) {
+	else if(strcmp(token_list[0], "unalias") == 0) {
 		// unalias called
 		// TODO: unalias
 		printf("Not supported... yet\n");
 	}
-	else if(strncmp(token_list[0], "exit", 4) == 0) {
+	else if(strcmp(token_list[0], "exit") == 0) {
 		// exit command called
 		cleanup();
 		exit(0);
 	}
-	else if(strncmp(token_list[0], "help", 4) == 0) {
+	else if(strcmp(token_list[0], "help") == 0) {
 		// help command called
 		command_help();
 	}
@@ -244,6 +244,8 @@ int main(int argc, char *argv[]) {
 		parse_tokens(token_count, token_list);
 		token_count = 0;
 	}
+	
+	cleanup();
 	
 	return 0;
 }
