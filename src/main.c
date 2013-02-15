@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -8,16 +9,181 @@
 #define BUFFER_SIZE	512
 #define TOKEN_MAX	50
 #define PATH_MAX	512
+#define ALIAS_MAX	10
 
 // Environment code
 char *env_home = NULL;
 char *env_path_master = NULL;
 char *env_path_current = NULL;
 
-/* Execute clean up code */
-void cleanup() {
-	// Reset the PATH variable
-	setenv("PATH", env_path_master, 1);
+// Delimiters
+static const char *delim = " \n";
+
+// Stores the alias names and values
+char *alias_key[ALIAS_MAX];
+char *alias_value[ALIAS_MAX];
+
+// Stores the number of aliases present
+unsigned int alias_count = 0;
+
+/* Initialise the alias structures */
+void alias_init() {
+	// Set all values to NULL to start with
+	for(int i = 0; i < ALIAS_MAX; i++) {
+		alias_key[i] = NULL;
+		alias_value[i] = NULL;
+	}
+	
+	return;
+}
+
+/* Search the alias list for the value key
+   
+   Params:
+   	key - The alias name (e.g. dir)
+   	
+   Returns:
+   	The corresponding value (i.e. what the alias resolves to). If the key isn't
+   	found, NULL is returned.
+ */
+char *alias_get(const char *key) {
+	// Iterate through the aliases looking for a match
+	for(int i = 0; i < ALIAS_MAX; i++) {
+		if(alias_key[i] == NULL)
+			// We don't want to compare a NULL value
+			continue;
+		else if(strcmp(alias_key[i], key) == 0)
+			// Found a match, return its corresponding value
+			return alias_value[i];
+	}
+	
+	return NULL;
+}
+
+/* Add an alias
+   
+   Params:
+   	key - The alias name (e.g. dir)
+   	value - What the alias resolves to (e.g. ls -a)
+   	
+   Returns:
+   	If the addition failed, false is returned. Otherwise true.
+ */
+bool alias_add(const char *key, const char *value) {
+	// Iterate through the aliases looking for a free space
+	char *exists = alias_get(key);
+	
+	if(exists != NULL) {
+		// Alias already exists, overwrite the value
+		free(exists);
+		exists = malloc(strlen(value) + 1);
+		strcpy(exists, value);
+		
+		return true;
+	}
+	
+	for(int i = 0; i < ALIAS_MAX; i++) {
+		if(alias_key[i] == NULL) {
+			// Found a free space, insert it here
+			alias_key[i] = malloc(strlen(key) + 1);
+			strcpy(alias_key[i], key);
+			alias_value[i] = malloc(strlen(value) + 1);
+			strcpy(alias_value[i], value);
+			
+			alias_count++;
+			
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+/* Remove an alias
+   
+   Params:
+   	key - The alias name (e.g. dir)
+   
+   Returns:
+   	If the removal failed, false is returned. Otherwise true.
+ */
+bool alias_remove(const char *key) {
+	// Iterate through the aliases looking for a match
+	for(int i = 0; i < ALIAS_MAX; i++) {
+		if(alias_key[i] == NULL)
+			// We don't want to compare a NULL value
+			continue;
+		else if(strcmp(alias_key[i], key) == 0) {
+			free(alias_key[i]);
+			alias_key[i] = NULL;
+			free(alias_value[i]);
+			alias_value[i] = NULL;
+			
+			alias_count--;
+			
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+/* Outputs the list of aliases */
+void alias_print() {
+	if(alias_count == 0) {
+		// No aliases present
+		printf("You have not set any aliases!\n");
+		return;
+	}
+		
+	// There's aliases present, iterate through all valid aliases
+	for(int i = 0; i < ALIAS_MAX; i++) {
+		if(alias_key[i] != NULL && alias_value[i] != NULL) {
+			// Found a valid alias pair
+			printf("[%d]: '%s' -> '%s'\n", i, alias_key[i], alias_value[i]);
+		}
+	}
+	
+	return;
+}
+
+/* unalias internal command */
+void command_unalias(const char *command) {
+	if(alias_get(command) != NULL) {
+		// Alias exists, remove it
+		if(!alias_remove(command)) {
+			fprintf(stderr, "error: unable to remove alias '%s'\n", command);
+		}
+	}
+	else {
+		fprintf(stderr, "error: alias '%s' does not exist\n", command);
+	}
+	
+	return;
+}
+
+/* alias internal command */
+void command_alias(const char *command1, const char *command2) {
+	if(command1 == NULL || command2 == NULL) {
+		// Print the list of aliases
+		alias_print();
+	}
+	else {
+		// Map an alias
+		if(alias_count == ALIAS_MAX) {
+			// Reached the maximum amount of aliases
+			fprintf(stderr, "error: maximum number of alises set\n");
+			return;
+		}
+		if(alias_get(command1) != NULL) {
+			// Alias already exists
+			printf("warning: overwriting alias '%s'\n", command1);
+		}
+		if(!alias_add(command1, command2)) {
+			// Something went wrong when trying to add the alias
+			fprintf(stderr, "error: unable to add alias\n");
+		}
+	}
 	
 	return;
 }
@@ -61,12 +227,28 @@ void command_pwd() {
 
 /* help internal command */
 void command_help() {
-	printf("cd\tchange current working directory\n");
-	printf("getpath\tprint system path\n");
-	printf("setpath\tset system path\n");
-	printf("pwd\tprint current working directory\n");
-	printf("help\tlist the available internal shell commands\n");
-	printf("exit\texit the shell\n");
+	printf("alias\t print aliases or add an alias\n");
+	printf("unalias\t remove an alias\n"); 
+	printf("cd\t change current working directory\n");
+	printf("getpath\t print system path\n");
+	printf("setpath\t set system path\n");
+	printf("pwd\t print current working directory\n");
+	printf("help\t list the available internal shell commands\n");
+	printf("exit\t exit the shell\n");
+	
+	return;
+}
+
+/* Execute clean up code */
+void cleanup() {
+	// Reset the PATH variable
+	setenv("PATH", env_path_master, 1);
+	
+	// Save aliases
+	// TODO
+	
+	// Save history
+	// TODO
 	
 	return;
 }
@@ -163,13 +345,32 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strcmp(token_list[0], "alias") == 0) {
 		// alias called
-		// TODO: alias
-		printf("Not supported... yet\n");
+		if(token_count >= 3) {
+			// Form the arguments into a string
+			char command_buffer[BUFFER_SIZE] = "";
+			
+			// i = 2 because we only want "command2"
+			for(int i = 2; i < token_count; i++) {
+				strcat(command_buffer, token_list[i]);
+				
+				if(i < (token_count - 1))
+					// append spaces, but not for the last arg
+					strcat(command_buffer, " ");
+			}
+			
+			command_alias(token_list[1], command_buffer);
+		}
+		else if(token_count == 1)
+			command_alias(NULL, NULL);
+		else
+			printf("usage: alias [command1] [command2]\n");
 	}
 	else if(strcmp(token_list[0], "unalias") == 0) {
 		// unalias called
-		// TODO: unalias
-		printf("Not supported... yet\n");
+		if(token_count != 2)
+			printf("usage: unalias <command>\n");
+		else
+			command_unalias(token_list[1]);
 	}
 	else if(strcmp(token_list[0], "exit") == 0) {
 		// exit command called
@@ -181,6 +382,32 @@ void parse_tokens(int token_count, char *token_list[]) {
 		command_help();
 	}
 	else {
+		// Check if command is an alias
+		char *alias = alias_get(token_list[0]);
+		
+		if(alias != NULL) {
+			// Don't want to alter original contents
+			char *alias_buffer = malloc(strlen(alias) + 1);
+			strcpy(alias_buffer, alias);
+			
+			// Command is an alias, lets split it up
+			int count = 0;
+			char *alias_args[TOKEN_MAX];
+			
+			alias_args[count] = strtok(alias_buffer, delim);
+			
+			while(alias_args[count] != NULL) {
+				count++;
+				alias_args[count] = strtok(NULL, delim);
+			}
+			
+			// Execute command
+			parse_tokens(count, alias_args);
+			
+			free(alias_buffer);
+			return;
+		}
+		
 		// An unsupported internal command was called, we must assume it's an 
 		// external command
 		execute_process(token_count, token_list);
@@ -193,20 +420,9 @@ int main(int argc, char *argv[]) {
 	// User input buffer
 	char buffer[BUFFER_SIZE];
 	
-	// Delimiters to use
-	char *delim = " \n";
-	
 	// Store tokens here (according to specification 50 tokens is reasonable)
 	char *token_list[TOKEN_MAX];
 	int token_count = 0;
-	
-	// Get the users PATH variable and set the shell PATH to that
-	if((env_path_master = getenv("PATH")) == NULL)
-		printf("warning: PATH variable undefined\n");
-	else {
-		printf("[DEBUG]: PATH = %s\n", env_path_master);
-		env_path_current = env_path_master;
-	}
 	
 	// Get the users HOME directory and set the current directory to that
 	if((env_home = getenv("HOME")) == NULL)
@@ -216,15 +432,28 @@ int main(int argc, char *argv[]) {
 		chdir(env_home);
 	}
 	
+	// Get the users PATH variable and set the shell PATH to that
+	if((env_path_master = getenv("PATH")) == NULL)
+		printf("warning: PATH variable undefined\n");
+	else {
+		printf("[DEBUG]: PATH = %s\n", env_path_master);
+		env_path_current = env_path_master;
+	}
+	
+	// Load aliases
+	alias_init();
+	
+	// Load history
+	// TODO
+	
 	// Start the shell
 	while(1) {
 		printf("$ ");
 		
 		if(fgets(buffer, BUFFER_SIZE, stdin) == NULL) {
-			// stdin stream closed, can't continue
+			// stdin stream closed, can't continue, end loop
 			perror("error: stdin stream closed");
-			cleanup();
-			exit(1);
+			break;
 		}
 		
 		// Tokenize the user input and store the tokens in an array for easy 
@@ -240,11 +469,18 @@ int main(int argc, char *argv[]) {
 		for(int i = 0; i <= token_count; i++)
 			printf("token_list[%d] = %s\n", i, token_list[i]);
 		
+		printf("token_count = %d\n", token_count);
+		
+		if(token_count == 0)
+			// Can't parse nothing...
+			continue;
+		
 		// Now parse the token(s) and reset the counter
 		parse_tokens(token_count, token_list);
 		token_count = 0;
 	}
 	
+	// Execute relevant clean up code
 	cleanup();
 	
 	return 0;
