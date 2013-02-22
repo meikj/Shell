@@ -10,6 +10,14 @@
  *
  * Version:
  *	0.8-stage8
+ *
+ * TODO:
+ *	1.	Fix bug with alias persistence. When I had three aliases load from the
+ *		file, I then unalias-ed the 2nd alias. As a result, when I exited the
+ *		shell, thus saving the aliases, only the first one was saved.
+ *	2.	Fix bug with history. When invoking the !! command it correctly saves
+ *		to history, but when invoking !! again it returns an error.
+ *	3.	Implement history persistence.
  */
 
 #include <stdio.h>
