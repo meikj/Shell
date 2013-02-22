@@ -235,7 +235,7 @@ void alias_init() {
 			char command2[BUFFER_SIZE] = "";
 			
 			// We want to skip the first two arguments (i.e. alias <command1>)
-			for(int i = 2; j < token_count; i++) {
+			for(int i = 2; i < token_count; i++) {
 				strcat(command2, alias_tokens[i]);
 				
 				if(i < (token_count - 1))
@@ -284,7 +284,7 @@ void command_alias(const char *command1, const char *command2) {
 			return;
 		}
 
-		if(alias_get(command1) != NULL) {
+		if(alias_get(command1) != NULL)
 			// Alias already exists
 			printf("warning: overwriting alias '%s'\n", command1);
 
@@ -358,7 +358,7 @@ void save_aliases() {
 	
 	// Set the working directory to HOME first
 	if(chdir(env_home) == -1) {
-		fprintf(stderr, "error: unable to reset working directory to home\n")
+		fprintf(stderr, "error: unable to reset working directory to home\n");
 		return;
 	}
 	
@@ -422,7 +422,7 @@ void execute_process(char *argv[]) {
 		// Child process
 		printf("[DEBUG]: execute_process(): execvp() called with:\n");
 		
-		for(int i = 0; i <= argc; i++)
+		for(int i = 0; argv[i] != NULL; i++)
 			printf("\targv[%d] = %s\n", i, argv[i]);
 		
 		if(execvp(argv[0], argv) == -1) {
@@ -653,10 +653,9 @@ int main(int argc, char *argv[]) {
 			char *history_str_number = full_command + 1;
 			int history_number = atoi(history_str_number);
 			
-			if(history_number == 0 || (history_number > history_count)) {
+			if(history_number == 0 || (history_number > history_count))
 				// Failed - either invalid number passed or 0
 				fprintf(stderr, "error: invalid history number\n");
-			}
 			else {
 				// Got a number, so attempt to fetch the history
 				char *fetch = history_value[history_number % HISTORY_MAX].string;
