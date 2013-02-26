@@ -61,7 +61,7 @@ unsigned int history_count = 0;
 /* Initialise the command history */
 void history_init() {
 	// Initialise the history to empty for now
-	for(int i = 1; i < HISTORY_MAX; i++) {
+	for(int i = 0; i < HISTORY_MAX; i++) {
 		history_value[i].number = i;
 		history_value[i].string = NULL; 
 	}
@@ -211,6 +211,8 @@ void alias_init() {
 			alias_key[i] = NULL;
 			alias_value[i] = NULL;
 		}
+
+		return;
 	}
 	else {
 		// File exists, parse it accordingly
@@ -257,6 +259,46 @@ void alias_init() {
 	
 	fclose(alias_file); 
 	
+	return;
+}
+
+/* history internal command */
+void command_history() {
+	// Output the history in ascending numerical order
+
+	// An example ordering may be:
+	// 20, 21, 22, 3, 4, 5, ..., 18, 19
+	// Split it up by iterating backwards and checking for a greater value
+
+	// TODO
+
+	int index_split = 0;
+	int max = history_value[HISTORY_MAX].number;
+
+	for(int i = HISTORY_MAX; i != 0; i--) {
+		if(history_value[i].number > max) {
+			// Found the "break point"
+			index_split = i;
+			break;
+		}
+	}
+
+	// Output the smaller section
+	for(int i = index_split; i < HISTORY_MAX; i++) {
+		if(history_value[i].string != NULL) {
+			printf("%d = %s\n",
+				history_value[i].number, history_value[i].string);
+		}
+	}
+
+	// Output the larger section
+	for(int i = 0; i < index_split; i++) {
+		if(history_value[i].string != NULL) {
+			printf("%d = %s\n",
+				history_value[i].number, history_value[i].string);
+		}
+	}
+
 	return;
 }
 
@@ -344,6 +386,9 @@ void command_pwd() {
 
 /* help internal command */
 void command_help() {
+	printf("history\t display history of commands\n");
+	printf("!<no>\t execute a specific historical command\n");
+	printf("!!\t execute the last command\n");
 	printf("alias\t print aliases or add an alias\n");
 	printf("unalias\t remove an alias\n"); 
 	printf("cd\t change current working directory\n");
@@ -390,7 +435,10 @@ void save_aliases() {
 
 /* Save the history for history persistence */
 void save_history() {
-	// TODO
+	FILE *history_file;
+
+	// todo
+
 	return;
 }
 
@@ -530,17 +578,10 @@ void parse_tokens(int token_count, char *token_list[]) {
 	}
 	else if(strcmp(token_list[0], "history") == 0) {
 		// history called
-		if(history_count == 0) {
+		if(history_count == 0)
 			fprintf(stderr, "error: no history recorded\n");
-			return;
-		}
-
-		for(int i = 1; i < HISTORY_MAX; i++) {
-			if(history_value[i].string != NULL) {
-				printf("%d = %s\n",
-					history_value[i].number, history_value[i].string);
-			}
-		}
+		else
+			command_history();
 	}
 	else if(strcmp(token_list[0], "alias") == 0) {
 		// alias called
@@ -562,7 +603,7 @@ void parse_tokens(int token_count, char *token_list[]) {
 		else if(token_count == 1)
 			command_alias(NULL, NULL);
 		else
-			printf("usage: alias [command1] [command2]\n");
+			printf("usage: alias [<command1> <command2>]\n");
 	}
 	else if(strcmp(token_list[0], "unalias") == 0) {
 		// unalias called
@@ -660,33 +701,57 @@ int main(int argc, char *argv[]) {
 		// We're using a circular array, so when we hit the max go back to start
 		int history_pos = (history_count + 1) % HISTORY_MAX;
 		
-		if(full_command[0] == '!' && full_command[1] == '!') {
-			// Previous history invokation
+		if(strcmp(full_command, "!!") == 0) {
+			// Previous history invokation (i.e. !! was entered)
 			if(history_count == 0)
 				// There's no recorded history
-				printf("There's no commands in the history\n");
+				printf("There are no commands stored in history\n");
 			else {
 				// Parse the previous command
-				char *prev = history_value[history_pos - 1].string;
-				strcpy(buffer, prev);
-				
-				history_invoke = true;
+				char *prev;
+
+				for(int i = 1; i < HISTORY_MAX; i++) {
+					// Iterate through history until a "valid" command is found
+					// This ensures when !! is in the history it follows through
+					prev = history_value[history_pos - i].string;
+
+					if(prev == NULL)
+						// Skip if value is NULL
+						continue;
+
+					if(prev[0] != '!')
+						// Found a command that isn't a history invokation, stop loop
+						break;
+				}
+
+				// Make sure the command isn't NULL or a history invokation
+				if((prev != NULL) && (prev[0] != '!')) {
+					strcpy(buffer, prev);
+					history_invoke = true;
+				}
+				else {
+					printf("warning: no previous history\n");
+				}
 			}
 		}
 		else if(full_command[0] == '!' && !(full_command[1] == '!')) {
-			// Possibly a number passed for history invokation
-			char *history_str_number = full_command + 1;
-			int history_number = atoi(history_str_number);
-			
-			if(history_number == 0 || (history_number > history_count))
-				// Failed - either invalid number passed or 0
-				fprintf(stderr, "error: invalid history number\n");
+			if(history_count == 0)
+				printf("There are no commands stored in history\n");
 			else {
-				// Got a number, so attempt to fetch the history
-				char *fetch = history_value[history_number % HISTORY_MAX].string;
-				strcpy(buffer, fetch);
+				// Possibly a number passed for history invokation
+				char *history_str_number = full_command + 1;
+				int history_number = atoi(history_str_number);
 				
-				history_invoke = true;
+				if(history_number == 0 || (history_number > history_count))
+					// Failed - either invalid number passed or 0
+					fprintf(stderr, "error: invalid history number\n");
+				else {
+					// Got a number, so attempt to fetch the history
+					char *fetch = history_value[history_number % HISTORY_MAX].string;
+					strcpy(buffer, fetch);
+					
+					history_invoke = true;
+				}
 			}
 		}
 		
