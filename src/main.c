@@ -12,9 +12,7 @@
  *	0.8-stage8
  *
  * TODO:
- *	2.	Fix bug with history. When invoking the !! command it correctly saves
- *		to history, but when invoking !! again it returns an error.
- *	3.	Implement history persistence.
+ *	1.	Implement history persistence.
  */
 
 #include <stdio.h>
@@ -268,13 +266,13 @@ void command_history() {
 
 	// An example ordering may be:
 	// 20, 21, 22, 3, 4, 5, ..., 18, 19
-	// Split it up by iterating backwards and checking for a greater value
-
-	// TODO
+	// Split it up by iterating backwards and checking for a greater value, this
+	// becomes the index_split (i.e. seperates the new from the old)
 
 	int index_split = 0;
 	int max = history_value[HISTORY_MAX - 1].number;
 
+	// Iterate through from right to left looking for the first greater value
 	for(int i = HISTORY_MAX - 1; i >= 0; i--) {
 		if(history_value[i].number > max) {
 			// Found the "break point"
@@ -440,7 +438,21 @@ void save_aliases() {
 void save_history() {
 	FILE *history_file;
 
-	// todo
+	if(chdir(env_home) == -1) {
+		fprintf(stderr, "error: unable to reset working directory to home\n");
+		return;
+	}
+
+	history_file = fopen(".hist_list", "w");
+
+	for(int i = 0; i < HISTORY_MAX; i++) {
+		printf("[DEBUG]: history = %d %s\n",
+			history_value[i].number, history_value[i].string);
+		fprintf(history_file, "%d %s\n",
+			history_value[i].number, history_value[i].string);
+	}
+
+	fclose(history_file);
 
 	return;
 }
