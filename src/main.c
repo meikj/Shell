@@ -37,7 +37,7 @@ char *env_path_master = NULL;
 char *env_path_current = NULL;
 
 // Delimiters
-static const char *delim = " \n";
+static const char *delim = " \t\n";
 
 // Stores the alias names and values
 char *alias_key[ALIAS_MAX];
@@ -396,8 +396,14 @@ void save_history() {
 
 /* Execute clean up code */
 void cleanup() {
+	// DEBUG: Display PATH before
+	printf("PATH (before reset) = %s\n", getenv("PATH"));
+
 	// Reset the PATH variable
 	setenv("PATH", env_path_master, 1);
+
+	// DEBUG: Display PATH before
+	printf("PATH (after reset) = %s\n", getenv("PATH"));
 	
 	// Save aliases
 	save_aliases();
@@ -594,7 +600,8 @@ int main(int argc, char *argv[]) {
 		printf("warning: PATH variable undefined\n");
 	else {
 		printf("[DEBUG]: PATH = %s\n", env_path_master);
-		env_path_current = env_path_master;
+		env_path_current = malloc(strlen(env_path_master) + 1);
+		strcpy(env_path_current, env_path_master);
 	}
 	
 	// Load aliases
