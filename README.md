@@ -17,7 +17,7 @@ To compile the shell, please execute:
 * Stage six - done
 * Stage seven - done
 * Stage eight - done
-* Stage nine - in progress
+* Stage nine - done
 
 ## Authors
 * Mark Anderson - <mark.anderson@strath.ac.uk>

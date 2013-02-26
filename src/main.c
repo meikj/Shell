@@ -9,10 +9,8 @@
  *	John Meikle <john.meikle@strath.ac.uk>
  *
  * Version:
- *	0.8-stage8
+ *	0.9-stage9
  *
- * TODO:
- *	1.	Implement history persistence.
  */
 
 #include <stdio.h>
@@ -78,8 +76,6 @@ void history_init() {
 		// Line has been read into buffer
 		// Only need to extract in format of <number> <command>
 
-		printf("[DEBUG]: history_buffer = %s\n", history_buffer);
-
 		char *number_str = strtok(history_buffer, delim);
 		int number = atoi(number_str);
 
@@ -106,10 +102,10 @@ void history_init() {
 		} while(command != NULL);
 
 		// Everything seems to have went well and we have formed a history entry
-		printf("[DEBUG] number = %d, string = %s\n", number, command_buffer);
-
 		// Insert history entry into the history array
 		int history_pos = number % HISTORY_MAX;
+
+		printf("\tAdding history: %d %s\n", number, command_buffer);
 
 		history_value[history_pos].number = number;
 		history_value[history_pos].string = malloc(strlen(command_buffer) + 1);
@@ -310,7 +306,7 @@ void alias_init() {
 			}
 			
 			// Add the alias and reset token counter
-			printf("Adding alias: '%s' -> '%s'\n", alias_tokens[1], command2);
+			printf("\tAdding alias: '%s' -> '%s'\n", alias_tokens[1], command2);
 			alias_add(alias_tokens[1], command2);
 			token_count = 0;
 		}
@@ -741,10 +737,12 @@ int main(int argc, char *argv[]) {
 	// Load aliases
 	printf("Initialising aliases:\n");
 	alias_init();
+	printf("\tdone!\n");
 	
 	// Load history
-	printf("Initialising history...\n");
+	printf("Initialising history:\n");
 	history_init();
+	printf("\tdone!\n\n");
 	
 	// Start the shell
 	while(1) {
