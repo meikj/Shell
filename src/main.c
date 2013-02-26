@@ -446,6 +446,10 @@ void save_history() {
 	history_file = fopen(".hist_list", "w");
 
 	for(int i = 0; i < HISTORY_MAX; i++) {
+		if(history_value[i].string == NULL)
+			// Record is empty, skip it
+			continue;
+
 		printf("[DEBUG]: history = %d %s\n",
 			history_value[i].number, history_value[i].string);
 		fprintf(history_file, "%d %s\n",
