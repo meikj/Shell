@@ -273,9 +273,9 @@ void command_history() {
 	// TODO
 
 	int index_split = 0;
-	int max = history_value[HISTORY_MAX].number;
+	int max = history_value[HISTORY_MAX - 1].number;
 
-	for(int i = HISTORY_MAX; i != 0; i--) {
+	for(int i = HISTORY_MAX - 1; i >= 0; i--) {
 		if(history_value[i].number > max) {
 			// Found the "break point"
 			index_split = i;
@@ -284,18 +284,21 @@ void command_history() {
 	}
 
 	// Output the smaller section
-	for(int i = index_split; i < HISTORY_MAX; i++) {
+	for(int i = index_split + 1; i < HISTORY_MAX; i++) {
 		if(history_value[i].string != NULL) {
 			printf("%d = %s\n",
 				history_value[i].number, history_value[i].string);
 		}
 	}
 
-	// Output the larger section
-	for(int i = 0; i < index_split; i++) {
-		if(history_value[i].string != NULL) {
-			printf("%d = %s\n",
-				history_value[i].number, history_value[i].string);
+	// If index_split is not 0 then that means there is a split somewhere
+	if(index_split != 0) {
+		// Output the larger section
+		for(int i = 0; i <= index_split; i++) {
+			if(history_value[i].string != NULL) {
+				printf("%d = %s\n",
+					history_value[i].number, history_value[i].string);
+			}
 		}
 	}
 
