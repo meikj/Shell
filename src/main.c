@@ -461,6 +461,44 @@ void execute_process(char *argv[]) {
 	token_list - The array of token strings
  */
 void parse_tokens(int token_count, char *token_list[]) {
+	// Check if command is an alias
+	char *alias = alias_get(token_list[0]);
+	
+	if(alias != NULL) {
+		// Don't want to alter original contents, so copy over to buffer
+		char *alias_buffer = malloc(strlen(alias) + 1);
+		strcpy(alias_buffer, alias);
+		
+		// Split the alias up into tokens so we can parse it easily
+		int count = 0;
+		char *alias_args[TOKEN_MAX];
+		
+		alias_args[count] = strtok(alias_buffer, delim);
+		
+		while(alias_args[count] != NULL) {
+			count++;
+			alias_args[count] = strtok(NULL, delim);
+		}
+
+		// Check if there's more than one token, if so append the arguments
+		if(token_count > 1) {
+			for(int i = 1; i < token_count; i++) {
+				// Append arguments
+				alias_args[count] = token_list[i];
+				count++;
+			}
+
+			// Set the last argument to NULL for argument parsing
+			alias_args[count] = NULL;
+		}
+		
+		// Execute command
+		parse_tokens(count, alias_args);
+		
+		free(alias_buffer);
+		return;
+	}
+
 	// Use the first token as indication of what to do (e.g. exit, cd, etc.)
 	if(strcmp(token_list[0], "cd") == 0) {
 		// cd called
@@ -543,32 +581,6 @@ void parse_tokens(int token_count, char *token_list[]) {
 		command_help();
 	}
 	else {
-		// Check if command is an alias
-		char *alias = alias_get(token_list[0]);
-		
-		if(alias != NULL) {
-			// Don't want to alter original contents, so copy over to buffer
-			char *alias_buffer = malloc(strlen(alias) + 1);
-			strcpy(alias_buffer, alias);
-			
-			// Split the alias up into tokens so we can parse it easily
-			int count = 0;
-			char *alias_args[TOKEN_MAX];
-			
-			alias_args[count] = strtok(alias_buffer, delim);
-			
-			while(alias_args[count] != NULL) {
-				count++;
-				alias_args[count] = strtok(NULL, delim);
-			}
-			
-			// Execute command
-			parse_tokens(count, alias_args);
-			
-			free(alias_buffer);
-			return;
-		}
-		
 		// An unsupported internal command was called, we must assume it's an 
 		// external command
 		execute_process(token_list);
