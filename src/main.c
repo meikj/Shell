@@ -482,7 +482,6 @@ void save_aliases() {
 			// Record is empty, skip it
 			continue;
 		
-		printf("[DEBUG]: alias = %s %s %s\n", arg1, arg2, arg3);
 		fprintf(alias_file, "%s %s %s\n", arg1, arg2, arg3);
 	}
 	
@@ -508,8 +507,6 @@ void save_history() {
 			// Record is empty, skip it
 			continue;
 
-		printf("[DEBUG]: history = %d %s\n",
-			history_value[i].number, history_value[i].string);
 		fprintf(history_file, "%d %s\n",
 			history_value[i].number, history_value[i].string);
 	}
@@ -521,14 +518,8 @@ void save_history() {
 
 /* Execute clean up code */
 void cleanup() {
-	// DEBUG: Display PATH before
-	printf("PATH (before reset) = %s\n", getenv("PATH"));
-
 	// Reset the PATH variable
 	setenv("PATH", env_path_master, 1);
-
-	// DEBUG: Display PATH before
-	printf("PATH (after reset) = %s\n", getenv("PATH"));
 	
 	// Save aliases
 	save_aliases();
@@ -557,11 +548,6 @@ void execute_process(char *argv[]) {
 	}
 	else if(new_process == 0) {
 		// Child process
-		printf("[DEBUG]: execute_process(): execvp() called with:\n");
-		
-		for(int i = 0; argv[i] != NULL; i++)
-			printf("\targv[%d] = %s\n", i, argv[i]);
-		
 		if(execvp(argv[0], argv) == -1) {
 			// Something went wrong when trying to execute the command
 			perror("error: execvp() failed");
@@ -573,7 +559,6 @@ void execute_process(char *argv[]) {
 	else {
 		// Wait for child to complete
 		wait(NULL);
-		printf("[DEBUG]: execute_process(): child process complete\n");
 	}
 	
 	return;
@@ -721,7 +706,6 @@ int main(int argc, char *argv[]) {
 	if((env_home = getenv("HOME")) == NULL)
 		printf("warning: HOME variable undefined\n");
 	else {
-		printf("[DEBUG]: HOME = %s\n", env_home);
 		chdir(env_home);
 	}
 	
@@ -729,7 +713,6 @@ int main(int argc, char *argv[]) {
 	if((env_path_master = getenv("PATH")) == NULL)
 		printf("warning: PATH variable undefined\n");
 	else {
-		printf("[DEBUG]: PATH = %s\n", env_path_master);
 		env_path_current = malloc(strlen(env_path_master) + 1);
 		strcpy(env_path_current, env_path_master);
 	}
@@ -767,11 +750,6 @@ int main(int argc, char *argv[]) {
 			token_count++;
 			token_list[token_count] = strtok(NULL, delim);
 		}
-		
-		for(int i = 0; i <= token_count; i++)
-			printf("token_list[%d] = %s\n", i, token_list[i]);
-		
-		printf("token_count = %d\n", token_count);
 		
 		if(token_count == 0)
 			// Can't parse nothing...
