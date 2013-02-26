@@ -58,13 +58,74 @@ unsigned int history_count = 0;
 
 /* Initialise the command history */
 void history_init() {
-	// Initialise the history to empty for now
-	for(int i = 0; i < HISTORY_MAX; i++) {
-		history_value[i].number = i;
-		history_value[i].string = NULL; 
+	FILE *history_file;
+	char history_buffer[BUFFER_SIZE];
+	int max = 0;
+
+	history_file = fopen(".hist_list", "r");
+
+	if(history_file == NULL) {
+		// Initialise the history to empty
+		for(int i = 0; i < HISTORY_MAX; i++) {
+			history_value[i].number = i;
+			history_value[i].string = NULL; 
+		}
+
+		return;
 	}
 
-	// TODO: Parse the history file
+	while(fgets(history_buffer, BUFFER_SIZE, history_file) != NULL) {
+		// Line has been read into buffer
+		// Only need to extract in format of <number> <command>
+
+		printf("[DEBUG]: history_buffer = %s\n", history_buffer);
+
+		char *number_str = strtok(history_buffer, delim);
+		int number = atoi(number_str);
+
+		if(number <= 0) {
+			// Skip the particular entry if the number is invalid
+			fprintf(stderr, "error: invalid entry in .hist_list, skipping...\n");
+			continue;
+		}
+
+		// Number extraction seems to have went well, continue...
+		char command_buffer[BUFFER_SIZE] = "";
+		char *command = strtok(NULL, delim);
+
+		if(command == NULL) {
+			// Skip the particular entry if the number is invalid
+			fprintf(stderr, "error: invalid entry in .hist_list, skipping...\n");
+			continue;
+		}
+
+		do {
+			// Concatenate the command(s) to the full command string
+			strcat(command_buffer, command);
+			command = strtok(NULL, delim);
+		} while(command != NULL);
+
+		// Everything seems to have went well and we have formed a history entry
+		printf("[DEBUG] number = %d, string = %s\n", number, command_buffer);
+
+		// Insert history entry into the history array
+		int history_pos = number % HISTORY_MAX;
+
+		history_value[history_pos].number = number;
+		history_value[history_pos].string = malloc(strlen(command_buffer) + 1);
+		strcpy(history_value[history_pos].string, command_buffer);
+
+		history_count++;
+
+		// Check if number is max so we can keep track of highest history number
+		if(number > max)
+			max = number;
+	}
+
+	// Set the history_count to the highest history number so as to preserve the number count
+	history_count = max;
+
+	fclose(history_file);
 
 	return;
 }
@@ -436,6 +497,7 @@ void save_aliases() {
 
 /* Save the history for history persistence */
 void save_history() {
+	// Save the history in ascending order
 	FILE *history_file;
 
 	if(chdir(env_home) == -1) {
