@@ -847,16 +847,17 @@ int main(int argc, char *argv[]) {
 				token_list[token_count] = strtok(NULL, delim);
 			}
 		}
+		else {	
+			// Only track non-history commands
+			history_count++;
 			
-		// No matter what the command, we track it anyway
-		history_count++;
-		
-		// Copy history position over to history element
-		history_value[history_pos].number = history_count;
-		
-		// Copy string from buffer over to history element
-		history_value[history_pos].string = malloc(strlen(full_command) + 1);
-		strcpy(history_value[history_pos].string, full_command);
+			// Copy history position over to history element
+			history_value[history_pos].number = history_count;
+			
+			// Copy string from buffer over to history element
+			history_value[history_pos].string = malloc(strlen(full_command) + 1);
+			strcpy(history_value[history_pos].string, full_command);
+		}
 		
 		// Now parse the token(s) and reset the counter
 		parse_tokens(token_count, token_list);
