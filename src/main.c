@@ -815,7 +815,7 @@ int main(int argc, char *argv[]) {
 							fetch = history_value[history_number % HISTORY_MAX].string;
 						}
 						else {
-							fprintf(stderr, "error: can't find any valid historical commands\n");
+							fprintf(stderr, "error: can't find any previous historical commands\n");
 						}
 					}
 
@@ -823,6 +823,9 @@ int main(int argc, char *argv[]) {
 					if((fetch != NULL) && (strcmp(fetch, "!!") != 0)) {
 						strcpy(buffer, fetch);
 						history_invoke = true;
+					}
+					else {
+						fprintf(stderr, "error: can't find any previous historical commands\n");
 					}
 				}
 			}
