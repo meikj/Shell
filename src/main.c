@@ -98,6 +98,7 @@ void history_init() {
 		do {
 			// Concatenate the command(s) to the full command string
 			strcat(command_buffer, command);
+			strcat(command_buffer, " "); // space out args
 			command = strtok(NULL, delim);
 		} while(command != NULL);
 
@@ -805,9 +806,24 @@ int main(int argc, char *argv[]) {
 				else {
 					// Got a number, so attempt to fetch the history
 					char *fetch = history_value[history_number % HISTORY_MAX].string;
-					strcpy(buffer, fetch);
-					
-					history_invoke = true;
+
+					while(strcmp(fetch, "!!") == 0) {
+						// Previous history command historically invoked, so get previous
+						// command
+						if(history_number > 1) {
+							history_number--;
+							fetch = history_value[history_number % HISTORY_MAX].string;
+						}
+						else {
+							fprintf(stderr, "error: can't find any valid historical commands\n");
+						}
+					}
+
+					// Make sure fetch isn't NULL and is a "valid" command
+					if((fetch != NULL) && (strcmp(fetch, "!!") != 0)) {
+						strcpy(buffer, fetch);
+						history_invoke = true;
+					}
 				}
 			}
 		}
